@@ -1,0 +1,492 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\geometry{margin=2.5cm}
+\hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+
+\title{Projet Algorithmique et Structures de Données\\
+Implémentation et comparaison de structures de données pour un catalogue de bibliothèque universitaire}
+\author{Licence 2 Mathématiques-Informatique\\Université Iba Der Thiam de Thiès & Hawa Sonko & Aida Diop} 
+\date{2025-2026}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+Ce rapport présente l’implémentation et l’analyse comparative de trois structures de données utilisées pour la gestion d’un catalogue de bibliothèque universitaire : le tableau statique, le tableau dynamique de pointeurs vers structures et la liste chaînée simple. L’objectif est de comparer les performances et les contraintes pratiques de ces structures sur les opérations fondamentales d’insertion, de recherche, de suppression, de tri et de calcul statistique.
+
+Le projet est réalisé en langage C avec une organisation modulaire, des programmes séparés pour chaque structure et une compilation via Makefile. Il s’inscrit dans le cadre de l’algorithmique et des structures de données, en confrontant l’analyse théorique de la complexité aux mesures expérimentales obtenues sur des jeux de données de taille croissante.
+
+\section{Présentation du domaine applicatif}
+Le domaine retenu est le catalogue de bibliothèque universitaire. Les enregistrements manipulés représentent des ouvrages caractérisés par un identifiant unique, un titre, un auteur, un ISBN, une année de publication, un genre, le nombre total d’exemplaires ainsi que le nombre d’exemplaires disponibles. Ce choix permet d’illustrer un cas concret d’utilisation des structures de données en environnement de gestion d’information.
+
+\section{Modélisation des données}
+Le type principal utilisé est la structure \texttt{Ouvrage}, définie dans le projet comme suit :
+
+\begin{verbatim}
+struct Ouvrage {
+    int id_ouvrage;
+    char titre[TITRE_LEN];
+    char auteur[AUTEUR_LEN];
+    char isbn[ISBN_LEN];
+    int annee_publication;
+    char genre[GENRE_LEN];
+    int nb_exemplaires_total;
+    int nb_exemplaires_dispo;
+    Emprunt *emprunts;
+};
+\end{verbatim}
+
+Les trois structures de données retenues sont :
+\begin{itemize}
+  \item le tableau statique de structures ;
+  \item le tableau dynamique de pointeurs vers structures ;
+  \item la liste chaînée simple de structures.
+\end{itemize}
+
+\section{Description des structures implémentées}
+Cette section présente les trois structures qui constituent le cœur du projet. Elles sont implémentées sur le même type d’enregistrement afin de permettre une comparaison directe de leur comportement dans des conditions identiques.
+
+\subsection{Tableau statique}
+Le tableau statique est une structure à capacité fixe. Il est alloué à la compilation dans un tableau de taille maximale définie par la constante \texttt{MAX\\_STATIQUE}. La structure stocke un nombre courant d’éléments et l’accès à un ouvrage se fait directement par indice, ce qui donne un temps constant pour la plupart des accès.
+
+\subsection{Tableau dynamique}
+Le tableau dynamique est une structure à capacité variable. Il est alloué à l’exécution et peut être agrandi par réallocation lorsque la taille dépasse la capacité courante. Chaque case contient un pointeur vers un objet \texttt{Ouvrage}. Cela permet de garder une sémantique proche du tableau statique tout en supportant une croissance flexible.
+
+\subsection{Liste chaînée}
+La liste chaînée simple stocke chaque ouvrage dans un nœud contenant le champ valeur et un pointeur vers le nœud suivant. La liste n’est pas indexée : les opérations de parcours se font en suivant les pointeurs à partir de la tête. Cette structure contraste avec les tableaux en raison de l’allocation dynamique de chaque nœud et du coût d’accès séquentiel.
+
+\section{Opérations supportées}
+Les opérations implémentées sont les suivantes :
+\begin{itemize}
+  \item insertion ;
+  \item recherche par identifiant ;
+  \item recherche par préfixe de titre ;
+  \item suppression ;
+  \item tri par insertion ;
+  \item tri rapide ;
+  \item calcul de moyenne, minimum et maximum ;
+  \item persistance binaire.
+\end{itemize}
+
+\section{Analyse théorique de complexité}
+Cette section présente les bornes asymptotiques attendues pour chaque structure et chaque opération. Les résultats sont donnés en meilleur cas, pire cas et cas moyen, puis justifiés à partir du principe algorithmique de chaque fonction.
+
+\subsection{Tableau statique}
+
+\subsubsection{Insertion}
+L’insertion dans un tableau statique se fait en position libre à l’indice \texttt{taille}. Si la capacité n’est pas dépassée, la complexité est :
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(1)$ ;
+  \item cas moyen : $\Theta(1)$.
+\end{itemize}
+La justification est la suivante : on effectue une écriture dans le tableau et une incrémentation de la taille. Ces deux opérations sont indépendantes du nombre d’éléments $n$. Il n’y a ni boucle ni décalage, donc le coût est constant.
+
+\subsubsection{Recherche par identifiant}
+La recherche parcourt les éléments de l’indice 0 à l’indice \texttt{taille-1} et compare l’identifiant de chaque ouvrage.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(n)$.
+\end{itemize}
+Si l’élément recherché est au début, une seule comparaison suffit. Dans le pire cas, la clé se trouve en fin de tableau ou est absente, donc on effectue $n$ comparaisons. En moyenne, on observe $\frac{n}{2}$ comparaisons pour une recherche linéaire sur $n$ éléments.
+
+\subsubsection{Recherche par préfixe}
+La recherche par préfixe parcourt également tous les éléments, avec une comparaison de préfixe de chaîne pour chaque ouvrage.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n \cdot p)$ ;
+  \item cas moyen : $\Theta(n \cdot p)$,
+\end{itemize}
+avec $p$ la longueur du préfixe. En pratique, la comparaison de chaînes s’arrête dès la première différence ou jusqu’à la longueur du préfixe, ce qui ajoute un facteur de complexité lié à $p$. Toutefois, le nombre d’ouvrages testés reste proportionnel à $n$.
+
+\subsubsection{Suppression}
+La suppression consiste à repérer l’élément puis à décaler les éléments suivants vers la gauche.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(n)$.
+\end{itemize}
+La recherche prend $O(n)$ dans le pire cas. Une fois l’élément trouvé à la position $i$, il faut recopier les éléments $i+1\ldots n-1$, soit $n-i-1$ copies. Au pire, cela représente $n-1$ copies, d’où une complexité linéaire.
+
+\subsubsection{Tri par insertion}
+Le tri par insertion parcourt le tableau de gauche à droite en insérant chaque élément à sa place dans la partie déjà triée.
+\begin{itemize}
+  \item meilleur cas : $\Omega(n)$ ;
+  \item pire cas : $O(n^2)$ ;
+  \item cas moyen : $\Theta(n^2)$.
+\end{itemize}
+Pour chaque position $j$ de 1 à $n-1$, on compare l’élément courant avec les antérieurs et on effectue un décalage. Dans le meilleur cas (tableau déjà trié), chaque élément est comparé une fois avec son prédécesseur, donc le coût total est de l’ordre de $\sum_{j=1}^{n-1} 1 = n-1 = O(n)$. Dans le pire cas (tableau trié en ordre inverse), le j-ième élément doit être déplacé jusqu’au début, produisant $\sum_{j=1}^{n-1} j = \frac{n(n-1)}{2} = O(n^2)$ comparaisons et déplacements.
+
+\subsubsection{Tri rapide}
+Le tri rapide partitionne le tableau autour d’un pivot choisi puis trie récursivement les sous-tableaux.
+\begin{itemize}
+  \item meilleur cas : $\Omega(n \log n)$ ;
+  \item pire cas : $O(n^2)$ ;
+  \item cas moyen : $\Theta(n \log n)$.
+\end{itemize}
+En cas moyen, la partition divise le tableau en deux sous-ensembles de taille approximativement $n/2$, ce qui donne la récurrence
+$$T(n) = 2T\left(\frac{n}{2}\right) + O(n).$$
+D’après le théorème maître, cela donne $T(n)=\Theta(n\log n)$. Dans le pire cas, un mauvais choix de pivot produit une partition dégénérée de taille 1 et $n-1$, ce qui conduit à la somme $\sum_{k=1}^{n} k = O(n^2)$.
+
+\subsubsection{Statistiques}
+Le calcul de la moyenne, du minimum et du maximum parcourt l’ensemble des données une seule fois.
+\begin{itemize}
+  \item complexité temporelle : $O(n)$ ;
+  \item complexité spatiale : $O(1)$.
+\end{itemize}
+On visite chaque ouvrage et on met à jour des accumulateurs. La mémoire supplémentaire utilisée est constante car on ne stocke pas d’information proportionnelle à $n$.
+
+Dans la pratique, le tableau statique utilise un espace fixe de $O(MAX\_STATIQUE)$ et un espace effectif de $O(n)$ pour les $n$ ouvrages réellement stockés. La distribution des données n’influence pas la complexité spatiale, mais elle influence le tri et la recherche : les données déjà triées donnent un meilleur cas pour le tri par insertion, tandis que la recherche linéaire reste majoritairement linéaire quelle que soit la distribution.
+
+\subsection{Tableau dynamique}
+
+\subsubsection{Insertion}
+L’insertion dans un tableau dynamique consiste à vérifier la capacité puis à réallouer si nécessaire.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(1)$ amorti.
+\end{itemize}
+Quand la capacité est suffisante, l’insertion est une affectation de pointeur et une incrémentation de taille. Si la capacité est atteinte, la fonction effectue une allocation d’un nouveau bloc de taille typiquement doublée, copie les anciens pointeurs et libère l’ancien bloc, soit $O(n)$ opérations. En doublant la capacité, les réallocations coûteuses surviennent logaritmiquement en nombre d’insertions, ce qui donne un coût amorti constant.
+
+\subsubsection{Recherche par identifiant}
+La recherche linéaire parcourt le tableau de pointeurs et compare les identifiants.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(n)$.
+\end{itemize}
+Le fait que les éléments soient stockés en pointeurs n’affecte pas l’ordre de grandeur du temps de recherche : la boucle visite chaque cellule du tableau et réalise une comparaison par élément.
+
+\subsubsection{Recherche par préfixe}
+Cette recherche est également linéaire en $n$ et prend un coût de comparaison de chaîne par élément.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n \cdot p)$ ;
+  \item cas moyen : $\Theta(n \cdot p)$.
+\end{itemize}
+
+\subsubsection{Suppression}
+La suppression nécessite une recherche suivie d’un décalage des pointeurs suivants.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(n)$.
+\end{itemize}
+Après avoir trouvé l’élément, on copie les pointeurs de droite à gauche pour combler le trou. Cela représente un nombre d’opérations proportionnel au nombre d’éléments situés après la position supprimée.
+
+\paragraph{Complexité spatiale.} Le tableau dynamique utilise $O(n)$ mémoire pour les pointeurs vers les ouvrages, plus un espace supplémentaire dû à la capacité allouée. Cette surcharge est amortie, mais elle peut atteindre $O(2n)$ temporairement lors de la réallocation.
+
+\paragraph{Influence de la distribution.} La distribution des valeurs n’affecte pas la complexité spatiale. Elle influe cependant sur le tri par insertion : les données déjà triées réduisent considérablement le nombre de déplacements, tandis que les distributions aléatoires ou inversées accentuent le coût quadratique.
+
+\subsubsection{Tri par insertion}
+Le tri par insertion sur le tableau dynamique suit la même logique que pour le tableau statique. Le coût en comparaisons et déplacements dépend uniquement du nombre d’éléments et de l’ordre initial.
+\begin{itemize}
+  \item meilleur cas : $\Omega(n)$ ;
+  \item pire cas : $O(n^2)$ ;
+  \item cas moyen : $\Theta(n^2)$.
+\end{itemize}
+
+\subsubsection{Tri rapide}
+Le tri rapide sur le tableau dynamique a la même complexité théorique que sur le tableau statique.
+\begin{itemize}
+  \item meilleur cas : $\Omega(n\log n)$ ;
+  \item pire cas : $O(n^2)$ ;
+  \item cas moyen : $\Theta(n\log n)$.
+\end{itemize}
+
+\subsubsection{Statistiques}
+Le calcul des statistiques est linéaire.
+\begin{itemize}
+  \item complexité temporelle : $O(n)$ ;
+  \item complexité spatiale : $O(1)$.
+\end{itemize}
+Dans la pratique, le tableau statique utilise un espace mémoire fixe de $O(MAX\_STATIQUE)$, même si la taille réelle des données est $n$. La capacité fixe implique une réservation mémoire maximale indépendante de la distribution des données. La distribution n’affecte pas la complexité temporelle des opérations de recherche ou d’insertion, mais elle influence le tri par insertion : les données déjà triées donnent un meilleur cas $\Omega(n)$, tandis qu’une distribution aléatoire ou inversée augmente significativement le nombre de comparaisons et de déplacements.
+\subsection{Liste chaînée}
+
+\subsubsection{Insertion}
+L’insertion dans une liste chaînée simple consiste à créer un nouveau nœud et à le placer en tête.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $\Omega(1)$ ;
+  \item cas moyen : $\Theta(1)$.
+\end{itemize}
+L’ajout en tête est constant car il ne nécessite que l’allocation d’un nœud, l’affectation du champ valeur et la mise à jour du pointeur \texttt{tete}. Il n’y a pas de parcours pour insérer à la fin.
+
+\subsubsection{Recherche par identifiant}
+La recherche parcourt la suite de nœuds jusqu’à trouver l’ID.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(n)$.
+\end{itemize}
+L’accès séquentiel impose la visite de chaque nœud. Si l’élément est absent ou situé en fin de liste, on parcourt l’ensemble des $n$ nœuds.
+
+\subsubsection{Recherche par préfixe}
+La recherche par préfixe est également séquentielle.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n \cdot p)$ ;
+  \item cas moyen : $\Theta(n \cdot p)$.
+\end{itemize}
+
+\subsubsection{Suppression}
+La suppression exige de parcourir la liste pour trouver le nœud à supprimer et de mettre à jour les pointeurs.
+\begin{itemize}
+  \item meilleur cas : $\Omega(1)$ ;
+  \item pire cas : $O(n)$ ;
+  \item cas moyen : $\Theta(n)$.
+\end{itemize}
+Après avoir localisé le nœud, la suppression proprement dite est constante : on relie le nœud précédent au suivant et on libère le nœud supprimé.
+
+\subsubsection{Tri par insertion}
+Dans cette implémentation, la liste chaînée est triée en copiant les valeurs dans un tableau temporaire, en triant ce tableau par insertion, puis en réaffectant les valeurs aux nœuds.
+\begin{itemize}
+  \item meilleur cas : $\Omega(n)$ ;
+  \item pire cas : $O(n^2)$ ;
+  \item cas moyen : $\Theta(n^2)$.
+\end{itemize}
+Le coût est identique à celui du tri par insertion sur tableau, avec un surcoût mémoire temporaire de $O(n)$ pour le tableau auxiliaire.
+
+\subsubsection{Tri rapide}
+Le tri rapide est également réalisé à l’aide d’un tableau intermédiaire dans l’implémentation actuelle.
+\begin{itemize}
+  \item meilleur cas : $\Omega(n\log n)$ ;
+  \item pire cas : $O(n^2)$ ;
+  \item cas moyen : $\Theta(n\log n)$.
+\end{itemize}
+La conversion de la liste en tableau puis l’appel à \texttt{qsort} implique un coût supplémentaire d’O(n) pour la copie aller-retour, mais la complexité dominante du tri rapide reste la même.
+
+\subsubsection{Statistiques}
+Le calcul de la moyenne, du minimum et du maximum parcourt la liste une fois.
+\begin{itemize}
+  \item complexité temporelle : $O(n)$ ;
+  \item complexité spatiale : $O(1)$.
+\end{itemize}
+Chaque nœud est visité et les valeurs numériques sont comparées ou additionnées.
+
+La liste chaînée nécessite un espace $O(n)$ pour les nœuds plus un pointeur supplémentaire par nœud, ce qui représente un overhead constant par élément.
+
+\paragraph{Complexité spatiale.} L’espace utilisé est $O(n)$ pour les nœuds et leurs pointeurs. Cette structure est plus coûteuse en mémoire que le tableau statique si l’on compte l’overhead des pointeurs, mais elle reste linéaire en fonction du nombre d’éléments.
+
+\paragraph{Influence de la distribution.} Pour la liste chaînée, l’insertion en tête reste indépendante de la distribution. En revanche, le tri par insertion est sensible à l’ordre initial des données car l’implémentation copie d’abord les valeurs dans un tableau avant de trier.
+
+\subsection{Tableau récapitulatif des complexités}
+\begin{table}[H]
+  \centering
+  \caption{Synthèse des complexités temporelles des structures par opération}
+  \begin{tabular}{lccc}
+    \toprule
+    Opération & Tableau statique & Tableau dynamique & Liste chaînée \\
+    \midrule
+    Insertion & $\Omega(1),\ \Theta(1),\ O(1)$ & $\Omega(1),\ \Theta(1),\ O(n)$ amorti & $\Omega(1),\ \Theta(1),\ O(1)$ \\
+    Recherche ID & $\Omega(1),\ \Theta(n),\ O(n)$ & $\Omega(1),\ \Theta(n),\ O(n)$ & $\Omega(1),\ \Theta(n),\ O(n)$ \\
+    Recherche préfixe & $\Omega(1),\ \Theta(n p),\ O(n p)$ & $\Omega(1),\ \Theta(n p),\ O(n p)$ & $\Omega(1),\ \Theta(n p),\ O(n p)$ \\
+    Suppression & $\Omega(1),\ \Theta(n),\ O(n)$ & $\Omega(1),\ \Theta(n),\ O(n)$ & $\Omega(1),\ \Theta(n),\ O(n)$ \\
+    Tri insertion & $\Omega(n),\ \Theta(n^2),\ O(n^2)$ & $\Omega(n),\ \Theta(n^2),\ O(n^2)$ & $\Omega(n),\ \Theta(n^2),\ O(n^2)$ \\
+    Tri rapide & $\Omega(n\log n),\ \Theta(n\log n),\ O(n^2)$ & $\Omega(n\log n),\ \Theta(n\log n),\ O(n^2)$ & $\Omega(n\log n),\ \Theta(n\log n),\ O(n^2)$ \\
+    Statistiques & $O(n)$ & $O(n)$ & $O(n)$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Complexité spatiale des structures}
+  \begin{tabular}{lcc}
+    \toprule
+    Structure & Complexité spatiale & Commentaire \\
+    \midrule
+    Tableau statique & $O(MAX\_STATIQUE)$ & Capacité fixe, utilisation effective $O(n)$ \\
+    Tableau dynamique & $O(n)$ & Tableau de pointeurs, surcharge lors de la réallocation \\
+    Liste chaînée & $O(n)$ & Nœuds alloués dynamiquement, pointeur supplémentaire par élément \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Étude expérimentale}
+\subsection{Protocole de mesures}
+Le protocole expérimental repose sur les tailles de données demandées : $10^{2}$, $10^{3}$, $10^{4}$ et $10^{5}$ enregistrements. Les mesures sont réalisées sur les opérations d’insertion, de recherche et de tri, avec trois profils de distribution : uniforme, gaussienne et données déjà triées. Chaque expérience est répétée plusieurs fois pour calculer une moyenne et un écart-type.
+
+La génération des graphiques s’appuie sur le script \texttt{scripts/plot\_benchmark.py} et le fichier de résultats \texttt{data/benchmark.csv}. Les trois versions du projet sont benchmarkées : \texttt{bibliotheque\_stat}, \texttt{bibliotheque\_dyn} et \texttt{bibliotheque\_lc}.
+
+\subsection{Interprétation des courbes}
+Les courbes de performance présentées ici sont choisies pour illustrer les tendances globales et les analyses expérimentales les plus significatives. Quinze graphiques ont été retenus comme les plus pertinents pour exposer les comparaisons structurelles, les profils de distribution, les références théoriques et les ralentissements relatifs. Les trois structures sont comparées sur les opérations principales, et les figures complémentaires de l’étude sont disponibles dans le dossier \texttt{graphs}.
+
+\subsection{Graphes et interprétation}
+
+\subsubsection{Graphique 1 : insertion}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/insertion_comparison.png}
+  \caption{Comparaison des performances d’insertion pour le tableau statique, le tableau dynamique et la liste chaînée.}
+\end{figure}
+ 
+À $n=10^{5}$, mesures d'insertion : tableau statique ≈ 5,7 ms, tableau dynamique ≈ 16,7 ms, liste chaînée ≈ 19,3 ms. Interprétation : les coûts d’allocation et de réallocation expliquent l’écart observé ; l’écriture directe dans un tableau reste la solution la plus rapide pour des insertions simples.
+
+\subsubsection{Graphique 2 : recherche}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/recherche_comparison.png}
+  \caption{Comparaison des performances de recherche par identifiant.}
+\end{figure}
+ 
+À $n=10^{5}$, les tableaux statique et dynamique mesurent environ $0{,}00017\,$ms, tandis que la liste chaînée atteint environ $2{,}296\,$ms, soit un facteur d’environ $1{,}4\times10^{4}$ en défaveur de la liste. Ces valeurs montrent un écart énorme en termes de constantes, malgré une même complexité asymptotique.
+
+Théoriquement, la recherche linéaire est $O(n)$ pour les trois structures ; en pratique, les constantes diffèrent fortement : les tableaux profitent d’un accès mémoire contigu et d’un bon comportement cache, réduisant fortement la latence, alors que la liste chaînée subit des sauts de pointeurs, des allocations et des cache misses qui expliquent l’écart observé.
+
+\subsubsection{Graphique 3 : tri}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/tri_comparison.png}
+  \caption{Comparaison des performances de tri par insertion.}
+\end{figure}
+\end{figure}
+
+À $n=10^{5}$, tri par insertion : tableau dynamique ≈ 31 s, tableau statique ≈ 50 s, liste chaînée ≈ 46 s. Interprétation : la complexité quadratique domine et les constantes liées à l’accès mémoire favorisent le tableau dynamique ; les copies et l’overhead de gestion pénalisent les autres structures.
+
+\subsubsection{Graphique 4 : insertion uniforme}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{./graphs/insertion_uniforme.png}
+  \caption{Performances d’insertion pour le profil uniforme.}
+\end{figure}
+\end{figure}
+
+À $n=10^{5}$ pour le profil uniforme, le tableau statique reste le plus rapide ; la liste chaînée dépasse légèrement le tableau dynamique, indiquant que l’overhead d’allocation de nœuds peut dépasser le coût de réallocation de tableau. Interprétation : la distribution uniforme n’atténue pas les coûts d’allocation ; la mémoire contiguë conserve un avantage pratique pour les insertions.
+
+\subsubsection{Graphique 5 : recherche uniforme}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{./graphs/recherche_uniforme.png}
+  \caption{Performances de recherche pour le profil uniforme.}
+\end{figure}
+\end{figure}
+
+À partir de $n=10^{4}$, la liste chaînée présente un ralentissement de l’ordre de $10^{2}$ à $10^{3}$ par rapport aux tableaux, qui restent de l’ordre de $0{,}0002\,$ms. Interprétation : la localité mémoire et l’accès contigu rendent les tableaux beaucoup plus efficaces pour la recherche linéaire ; la liste chaînée est pénalisée par les sauts d’adresse et les cache misses.
+
+\subsubsection{Graphique 6 : tri uniforme}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{./graphs/tri_uniforme.png}
+  \caption{Performances de tri pour le profil uniforme.}
+\end{figure}
+
+Le graphique tri uniforme montre que le tableau dynamique reste nettement le meilleur. À $n=10^{5}$, il prend environ 26,7 s, contre 47,6 s pour le tableau statique et 40,7 s pour la liste chaînée. La courbe dynamique reste la plus basse sur toute la plage, ce qui confirme un avantage significatif en pratique.
+
+\subsection{Visualisations complémentaires}
+\subsubsection{Graphique 7 : comparaison en échelle logarithmique}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/tri_comparison_log.png}
+  \caption{Comparaison des performances de tri entre les structures en échelle logarithmique.}
+\end{figure}
+
+La représentation logarithmique montre que les trois courbes restent quasi-linéaires, confirmant un ordre de croissance polynomial. La liste chaînée et le tableau statique s’écartent progressivement, tandis que le tableau dynamique conserve un écart constant plus faible.
+
+\subsubsection{Graphique 8 : empirique vs théorie}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/tri_theory.png}
+  \caption{Courbes empiriques des temps de tri et référence $n^2$.}
+\end{figure}
+
+La référence $n^2$ est tracée pour comparer la pente empirique. Les courbes du tri s’alignent bien sur cette forme quadratique, surtout pour le tableau statique et la liste chaînée, ce qui vérifie la complexité théorique attendue.
+
+\subsubsection{Graphique 9 : distribution fixe pour $n = 10^{4}$}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/tri_fixed_n_10000.png}
+  \caption{Comparaison des profils de distribution pour $n = 10^{4}$ lors du tri.}
+\end{figure}
+
+Avec $n=10^{4}$, le tableau dynamique est presque deux fois plus rapide que le tableau statique et la liste chaînée sur les trois profils. Les temps tournent autour de 126-134 ms pour le tableau dynamique contre 240-251 ms pour les deux autres structures, ce qui montre l’avantage de la mémoire contiguë sur ce cas.
+
+\subsubsection{Graphique 10 : histogramme des ralentissements relatifs}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/tri_slowdown.png}
+  \caption{Ralentissement relatif des structures pour le tri selon les profils de distribution.}
+\end{figure}
+
+Le tableau dynamique sert de référence avec un facteur de ralentissement égal à 1.0. Le tableau statique est entre 1,4 et 2,9 fois plus lent selon le profil, et la liste chaînée varie de 1,5 à 4,0. Cette comparaison montre que la structure la plus flexible est aussi la plus efficace sur ces mesures.
+
+\subsubsection{Graphique 11 : insertion en échelle logarithmique}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/insertion_comparison_log.png}
+  \caption{Performances d’insertion entre les structures en échelle logarithmique.}
+\end{figure}
+
+Sur l’insertion en échelle logarithmique, le tableau statique conserve la pente la plus faible. Le tableau dynamique reste à un niveau supérieur constant, et la liste chaînée s’écarte progressivement, indiquant un surcoût mécanique lié à l’allocation de nœuds.
+
+\subsubsection{Graphique 12 : recherche en échelle logarithmique}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/recherche_comparison_log.png}
+  \caption{Performances de recherche entre les structures en échelle logarithmique.}
+\end{figure}
+
+En recherche, l’échelle logarithmique met en évidence un comportement presque parfaitement linéaire pour les tableaux. La liste chaînée reste très proche à petite taille, puis s’éloigne nettement après $10^{4}$, ce qui confirme son coût de parcours plus élevé.
+
+\subsubsection{Graphique 13 : insertion empirique vs théorie}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/insertion_theory.png}
+  \caption{Courbes empiriques des temps d’insertion et référence théorique.}
+\end{figure}
+
+Pour l’insertion, la courbe empirique suit bien la référence linéaire. Les tableaux restent presque parallèles à la droite de référence, tandis que la liste chaînée conserve un décalage constant, ce qui indique un facteur multiplicatif supplémentaire.
+
+\subsubsection{Graphique 14 : recherche empirique vs théorie}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/recherche_theory.png}
+  \caption{Courbes empiriques des temps de recherche et référence linéaire.}
+\end{figure}
+
+La recherche empirique s’aligne fortement avec la droite linéaire, ce qui atteste du caractère $O(n)$ de l’algorithme. Les tableaux sont proches l’un de l’autre, avec un léger avantage de stabilité sur la mémoire contiguë.
+
+\subsubsection{Graphique 15 : ralentissement relatif de l’insertion}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{./graphs/insertion_slowdown.png}
+  \caption{Ralentissement relatif des structures pour l’insertion.}
+\end{figure}
+
+L’histogramme de ralentissement montre que le tableau dynamique est la meilleure référence, avec le tableau statique 1,5 à 2,8 fois plus lent et la liste chaînée 2,5 à 4 fois plus lente selon le profil. Cela confirme que la flexibilité du tableau dynamique ne nuit pas autant que l’overhead de la liste chaînée.
+
+\paragraph{} Ces visualisations sélectionnées répondent aux exigences essentielles de l’étude expérimentale : comparaison globale, profils représentatifs, échelle logarithmique, comparaison empirique/théorique et ralentissement relatif. Les autres courbes sont disponibles dans le dossier \texttt{graphs}.
+
+\section{Synthèse comparative}
+Le tableau statique est le plus simple et le plus rapide pour les accès directs, mais sa capacité est fixe. Le tableau dynamique offre une capacité variable et convient mieux aux volumes de données inconnus, au prix d’un surcoût lié aux réallocations mémoire. La liste chaînée apporte une insertion flexible en tête et une allocation par nœud, mais son accès séquentiel et son overhead mémoire rendent son usage moins performant pour le tri et les recherches fréquentes.
+
+\section{Persistance}
+La persistance binaire permet de sauvegarder et de recharger les données depuis un fichier. Les opérations de lecture et d’écriture sont linéaires en fonction du nombre d’ouvrages, car elles parcourent l’ensemble des enregistrements pour sérialiser ou désérialiser chaque élément. Cette fonctionnalité rend le système utilisable dans un contexte réel de conservation de données.
+
+\section{Conclusion}
+L’implémentation réalisée répond aux objectifs du projet en proposant trois structures de données concurrentes sur un même type d’enregistrement. Le tableau statique offre une solution simple et prévisible, le tableau dynamique apporte la flexibilité nécessaire pour les jeux de données de taille variable, et la liste chaînée illustre les avantages et limites des structures liées.
+
+La comparaison entre ces trois structures met en évidence un compromis entre simplicité, capacité fixe, adaptabilité dynamique et coût d’accès. Les résultats théoriques et expérimentaux montrent que le choix d’une structure dépend du contexte d’utilisation, de la taille attendue des données et des contraintes de performance.
+
+\end{document}
