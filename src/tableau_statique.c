@@ -178,6 +178,37 @@ int ts_min_exemplaires(TabStatique *ts) {
             min = ts->data[i].nb_exemplaires_total;
     return min;
 }
+Ouvrage **ts_rechercher_intervalle_annee(TabStatique *ts, int min, int max, int *count) {
+    if (!ts || !count) return NULL;
+
+    int n = 0;
+    for (int i = 0; i < ts->taille; i++)
+        if (ts->data[i].annee_publication >= min && ts->data[i].annee_publication <= max)
+            n++;
+
+    *count = n;
+    if (n == 0) return NULL;
+
+    Ouvrage **resultats = calloc((size_t)n, sizeof(*resultats));
+    if (!resultats) return NULL;
+
+    int pos = 0;
+    for (int i = 0; i < ts->taille; i++)
+        if (ts->data[i].annee_publication >= min && ts->data[i].annee_publication <= max)
+            resultats[pos++] = &ts->data[i];
+
+    return resultats;
+}
+
+int ts_maj_ouvrage(TabStatique *ts, int id, Ouvrage nouvelle_valeur) {
+    for (int i = 0; i < ts->taille; i++) {
+        if (ts->data[i].id_ouvrage == id) {
+            ts->data[i] = nouvelle_valeur;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 // Affichage
 void ts_afficher(TabStatique *ts) {
