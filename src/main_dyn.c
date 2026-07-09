@@ -70,7 +70,7 @@ int main(void) {
                     break;
                 }
             }
-            printf("%d ouvrage(s) g\u00e9n\u00e9r\u00e9(s).\n", n);
+            printf("%d ouvrage(s) genere(s).\n", n);
             break;
         }
 

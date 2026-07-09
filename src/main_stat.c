@@ -17,13 +17,13 @@
 
 static void afficher_menu(void) {
     printf("\n=== Bibliotheque UIDT ===\n");
-    printf(" 1. G\u00e9n\u00e9rer des ouvrages\n");
+    printf(" 1. Generer des ouvrages\n");
     printf(" 2. Afficher tous les ouvrages\n");
     printf(" 3. Rechercher par ID\n");
-    printf(" 4. Rechercher par titre (pr\u00e9fixe)\n");
+    printf(" 4. Rechercher par titre (prefixe)\n");
     printf(" 5. Supprimer un ouvrage\n");
     printf(" 6. Trier par titre (insertion)\n");
-    printf(" 7. Trier par ann\u00e9e (rapide)\n");
+    printf(" 7. Trier par annee (rapide)\n");
     printf(" 8. Statistiques\n");
     printf(" 9. Sauvegarder\n");
     printf("10. Charger depuis fichier\n");
@@ -57,7 +57,7 @@ int main(void) {
             ts->taille = 0;
             for (int i = 0; i < n; i++)
                 ts_inserer(ts, ouvrage_aleatoire(i + 1));
-            printf("%d ouvrage(s) g\u00e9n\u00e9r\u00e9(s).\n", n);
+            printf("%d ouvrage(s) genere(s).\n", n);
             break;
         }
 
