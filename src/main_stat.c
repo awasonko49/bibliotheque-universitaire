@@ -134,54 +134,54 @@ int main(void) {
             charger_ouvrages(ts, FICHIER_DATA);
             break;
 
-        // case 11: {
-        //     int min, max, count = 0;
-        //     printf("Annee minimum : ");
-        //     scanf("%d", &min);
-        //     printf("Annee maximum : ");
-        //     scanf("%d", &max);
-        //     Ouvrage **resultats = ts_rechercher_intervalle_annee(ts, min, max, &count);
-        //     if (!resultats || count == 0) {
-        //         printf("Aucun ouvrage trouve dans l'intervalle [%d, %d].\n", min, max);
-        //         break;
-        //     }
-        //     printf("\n=== Resultats (%d ouvrage(s)) ===\n", count);
-        //     for (int i = 0; i < count; i++)
-        //         ouvrage_afficher(resultats[i]);
-        //     free(resultats);
-        //     break;
-        // }
+        case 11: {
+            int min, max, count = 0;
+           printf("Annee minimum : ");
+           scanf("%d", &min);
+           printf("Annee maximum : ");
+           scanf("%d", &max);
+           Ouvrage **resultats = ts_rechercher_intervalle_annee(ts, min, max, &count);
+           if (!resultats || count == 0) {
+               printf("Aucun ouvrage trouve dans l'intervalle [%d, %d].\n", min, max);
+               break;
+           }
+           printf("\n=== Resultats (%d ouvrage(s)) ===\n", count);
+           for (int i = 0; i < count; i++)
+               ouvrage_afficher(resultats[i]);
+           free(resultats);
+           break;
+         }
 
-        // case 12: {
-        //     int id;
-        //     printf("ID a modifier : ");
-        //     scanf("%d", &id);
-        //     Ouvrage *actuel = ts_rechercher_id(ts, id);
-        //     if (!actuel) {
-        //         printf("Aucun ouvrage trouve avec l'ID %d.\n", id);
-        //         break;
-        //     }
-        //     Ouvrage nouveau = *actuel;
-        //     printf("Nouveau titre : ");
-        //     scanf(" %99[^\n]", nouveau.titre);
-        //     printf("Nouvel auteur : ");
-        //     scanf(" %79[^\n]", nouveau.auteur);
-        //     printf("Nouvel ISBN : ");
-        //     scanf(" %19[^\n]", nouveau.isbn);
-        //     printf("Nouvelle annee : ");
-        //     scanf("%d", &nouveau.annee_publication);
-        //     printf("Nouveau genre : ");
-        //     scanf(" %39[^\n]", nouveau.genre);
-        //     printf("Nouveaux exemplaires total : ");
-        //     scanf("%d", &nouveau.nb_exemplaires_total);
-        //     printf("Nouveaux exemplaires disponibles : ");
-        //     scanf("%d", &nouveau.nb_exemplaires_dispo);
-        //     if (ts_maj_ouvrage(ts, id, nouveau))
-        //         printf("Ouvrage mis a jour avec succes.\n");
-        //     else
-        //         printf("Echec de la mise a jour.\n");
-        //     break;
-        // }
+         case 12: {
+            int id;
+            printf("ID a modifier : ");
+            scanf("%d", &id);
+            Ouvrage *actuel = ts_rechercher_id(ts, id);
+            if (!actuel) {
+                printf("Aucun ouvrage trouve avec l'ID %d.\n", id);
+                break;
+           }
+           Ouvrage nouveau = *actuel;
+           printf("Nouveau titre : ");
+           scanf(" %99[^\n]", nouveau.titre);
+           printf("Nouvel auteur : ");
+           scanf(" %79[^\n]", nouveau.auteur);
+           printf("Nouvel ISBN : ");
+           scanf(" %19[^\n]", nouveau.isbn);
+           printf("Nouvelle annee : ");
+           scanf("%d", &nouveau.annee_publication);
+           printf("Nouveau genre : ");
+           scanf(" %39[^\n]", nouveau.genre);
+          printf("Nouveaux exemplaires total : ");
+          scanf("%d", &nouveau.nb_exemplaires_total);
+          printf("Nouveaux exemplaires disponibles : ");
+          scanf("%d", &nouveau.nb_exemplaires_dispo);
+          if (ts_maj_ouvrage(ts, id, nouveau))
+              printf("Ouvrage mis a jour avec succes.\n");
+          else
+              printf("Echec de la mise a jour.\n");
+          break;
+         }
 
         case 0:
             printf("Au revoir.\n");
