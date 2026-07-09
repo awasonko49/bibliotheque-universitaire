@@ -2,7 +2,7 @@
 #define PERSISTANCE_H
 
 /*
- * Interface de persistance de la bibliothèque.
+ * Interface de persistance de la bibliotheque.
  * Elle permet de sauvegarder et recharger les ouvrages
  * dans les versions statique et dynamique.
  */
