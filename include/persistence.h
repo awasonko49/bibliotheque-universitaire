@@ -1,4 +1,4 @@
-sz#ifndef PERSISTANCE_H
+#ifndef PERSISTANCE_H
 #define PERSISTANCE_H
 
 /*
